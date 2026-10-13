@@ -1,0 +1,582 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Apple Tray Grading API",
+    "description": "REST API for tray photo grading, weights, auth, and admin.\n\n**Setup**\n1. Start server: `uvicorn api.main:app --host 0.0.0.0 --port 8000`\n2. Set collection variables if needed (`base_url`, `device_id`).\n3. Run **Auth → Admin Login** first (saves `access_token`).\n4. Every protected request sends `Authorization` + `X-Device-Id`.\n\n**Default admin:** admin@example.com / Admin123!",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000" },
+    { "key": "access_token", "value": "" },
+    { "key": "device_id", "value": "postman-device-1" },
+    { "key": "user_access_token", "value": "" },
+    { "key": "user_device_id", "value": "postman-user-device-1" },
+    { "key": "job_id", "value": "" },
+    { "key": "org_id", "value": "1" },
+    { "key": "user_id", "value": "2" },
+    { "key": "reset_token", "value": "" },
+    { "key": "user_email", "value": "operator@example.com" },
+    { "key": "user_password", "value": "UserPass123!" }
+  ],
+  "item": [
+    {
+      "name": "0. Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/health",
+            "description": "API + ML model readiness."
+          }
+        },
+        {
+          "name": "Root",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\",\n  \"full_name\": \"Tray Operator\",\n  \"org_name\": \"Demo Packhouse\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/auth/register",
+            "description": "Creates pending user (+ optional org). Admin must approve before login."
+          }
+        },
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  pm.collectionVariables.set('access_token', j.access_token);",
+                  "  pm.collectionVariables.set('device_id', j.device_id);",
+                  "  console.log('Admin token saved');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin123!\",\n  \"device_id\": \"{{device_id}}\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/auth/login",
+            "description": "Saves access_token + device_id into collection variables."
+          }
+        },
+        {
+          "name": "User Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  pm.collectionVariables.set('user_access_token', j.access_token);",
+                  "  pm.collectionVariables.set('user_device_id', j.device_id);",
+                  "  console.log('User token saved');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\",\n  \"device_id\": \"{{user_device_id}}\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/auth/login",
+            "description": "Login as approved operator. Saves user_access_token."
+          }
+        },
+        {
+          "name": "Me (current user)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": "{{base_url}}/api/v1/auth/me"
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.reset_token) {",
+                  "    pm.collectionVariables.set('reset_token', j.reset_token);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/auth/forgot-password",
+            "description": "Demo mode returns reset_token in body (no email server)."
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{reset_token}}\",\n  \"new_password\": \"UserPass123!\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/auth/reset-password"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": "{{base_url}}/api/v1/auth/logout",
+            "description": "Revokes all sessions for this user. Re-login after this."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Admin",
+      "item": [
+        {
+          "name": "List Pending Users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const arr = pm.response.json();",
+                  "  if (Array.isArray(arr) && arr.length) {",
+                  "    pm.collectionVariables.set('user_id', String(arr[0].id));",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": "{{base_url}}/api/v1/admin/users/pending"
+          }
+        },
+        {
+          "name": "List All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/admin/users?status=",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "admin", "users"],
+              "query": [
+                { "key": "status", "value": "", "description": "pending | approved | rejected" },
+                { "key": "org_id", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\",\n  \"org_id\": {{org_id}},\n  \"role\": \"user\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/admin/users/{{user_id}}/approval",
+            "description": "Set status to approved or rejected. Assign org_id so subscription check works."
+          }
+        },
+        {
+          "name": "Reject User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"rejected\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/admin/users/{{user_id}}/approval"
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Updated Operator\",\n  \"role\": \"user\",\n  \"status\": \"approved\",\n  \"org_id\": {{org_id}}\n}"
+            },
+            "url": "{{base_url}}/api/v1/admin/users/{{user_id}}"
+          }
+        },
+        {
+          "name": "Create Organization",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('org_id', String(pm.response.json().id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demo Packhouse 2\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/admin/organizations"
+          }
+        },
+        {
+          "name": "List Organizations",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const arr = pm.response.json();",
+                  "  if (Array.isArray(arr) && arr.length) {",
+                  "    pm.collectionVariables.set('org_id', String(arr[0].id));",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": "{{base_url}}/api/v1/admin/organizations"
+          }
+        },
+        {
+          "name": "Get Organization",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": "{{base_url}}/api/v1/admin/organizations/{{org_id}}"
+          }
+        },
+        {
+          "name": "Activate Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\",\n  \"expires_at\": \"2030-12-31T23:59:59+00:00\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/admin/organizations/{{org_id}}/subscription",
+            "description": "Users cannot submit jobs until org subscription is active."
+          }
+        },
+        {
+          "name": "Expire / Deactivate Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"expired\",\n  \"expires_at\": \"2020-01-01T00:00:00+00:00\"\n}"
+            },
+            "url": "{{base_url}}/api/v1/admin/organizations/{{org_id}}/subscription"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Jobs (Grading)",
+      "item": [
+        {
+          "name": "Submit Job (auto process)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 202) {",
+                  "  pm.collectionVariables.set('job_id', pm.response.json().job_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{user_access_token}}" },
+              { "key": "X-Device-Id", "value": "{{user_device_id}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select a tray photo (jpg/png/heic). Example: sample_images/apple.jpg"
+                },
+                { "key": "lot_id", "value": "LOT-001", "type": "text" },
+                { "key": "lot_name", "value": "Morning Batch", "type": "text" },
+                {
+                  "key": "total_sampled_weight_g",
+                  "value": "15000",
+                  "type": "text",
+                  "description": "Lot scale reading in grams"
+                },
+                {
+                  "key": "avg_apple_weight_g",
+                  "value": "180",
+                  "type": "text",
+                  "disabled": true
+                },
+                { "key": "a_threshold", "value": "0.45", "type": "text" },
+                { "key": "auto_process", "value": "true", "type": "text" }
+              ]
+            },
+            "url": "{{base_url}}/api/v1/jobs/submit",
+            "description": "Uses USER token. After approve + activate subscription, login as user first.\n\nAdmin can also submit with admin token if preferred — change Authorization header to {{access_token}} / {{device_id}}."
+          }
+        },
+        {
+          "name": "Submit Job as Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 202) {",
+                  "  pm.collectionVariables.set('job_id', pm.response.json().job_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": [],
+                  "description": "Select tray photo from disk"
+                },
+                { "key": "lot_id", "value": "LOT-ADMIN-1", "type": "text" },
+                { "key": "lot_name", "value": "Admin Test Lot", "type": "text" },
+                { "key": "total_sampled_weight_g", "value": "12000", "type": "text" },
+                { "key": "a_threshold", "value": "0.45", "type": "text" },
+                { "key": "auto_process", "value": "true", "type": "text" }
+              ]
+            },
+            "url": "{{base_url}}/api/v1/jobs/submit",
+            "description": "Admin bypasses subscription check. Easiest first grading test."
+          }
+        },
+        {
+          "name": "Submit Job (upload only, no process)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 202) {",
+                  "  pm.collectionVariables.set('job_id', pm.response.json().job_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "image", "type": "file", "src": [] },
+                { "key": "lot_id", "value": "LOT-002", "type": "text" },
+                { "key": "total_sampled_weight_g", "value": "10000", "type": "text" },
+                { "key": "auto_process", "value": "false", "type": "text" }
+              ]
+            },
+            "url": "{{base_url}}/api/v1/jobs/submit"
+          }
+        },
+        {
+          "name": "Trigger Process",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": "{{base_url}}/api/v1/jobs/{{job_id}}/process"
+          }
+        },
+        {
+          "name": "Get Job Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": "{{base_url}}/api/v1/jobs/{{job_id}}/status",
+            "description": "Poll until status is completed or failed."
+          }
+        },
+        {
+          "name": "Get Job Results",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": "{{base_url}}/api/v1/jobs/{{job_id}}/results",
+            "description": "Returns grading counts + weight breakdown when completed."
+          }
+        },
+        {
+          "name": "Retry Failed Job",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": "{{base_url}}/api/v1/jobs/{{job_id}}/retry"
+          }
+        },
+        {
+          "name": "List Jobs",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" },
+              { "key": "X-Device-Id", "value": "{{device_id}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs?limit=50&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "jobs"],
+              "query": [
+                { "key": "status", "value": "", "description": "queued|processing|completed|failed|uploaded|retrying", "disabled": true },
+                { "key": "limit", "value": "50" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

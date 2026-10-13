@@ -1,0 +1,68 @@
+# Secrets & credentials — never commit
+git-pat.txt
+**/git-pat.txt
+database.txt
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.sample
+
+# Dependencies
+**/node_modules/
+**/vendor/
+**/.pnp
+**/.pnp.js
+
+# Python
+**/__pycache__/
+**/*.py[cod]
+**/*.egg-info/
+**/.venv/
+**/venv/
+**/.pytest_cache/
+**/.mypy_cache/
+
+# Model weights (large binaries)
+models/*.pt
+**/*.pt
+**/*.pth
+**/*.onnx
+
+# App data / uploads / databases
+**/data/uploads/
+**/data/*.db
+**/*.sqlite
+**/*.sqlite3
+api/data/
+laravel-api/storage/logs/
+laravel-api/storage/framework/cache/
+laravel-api/storage/framework/sessions/
+laravel-api/storage/framework/views/
+laravel-api/storage/app/uploads/
+laravel-api/bootstrap/cache/*.php
+!laravel-api/bootstrap/cache/.gitignore
+
+# Build / cache
+**/build/
+**/dist/
+**/.cache/
+**/coverage/
+Productapp/build/
+frontend_build/static/
+
+# Logs & OS / IDE
+**/*.log
+**/.DS_Store
+**/Thumbs.db
+**/.vscode/
+**/.idea/
+**/.grok/
+
+# HEIC samples (optional large binaries)
+sample_images/*.HEIC
+sample_images/*.heic
+
+# Local overrides
+*.local
+credential*
+*credentials*

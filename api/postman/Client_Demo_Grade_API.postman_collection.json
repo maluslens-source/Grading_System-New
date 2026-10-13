@@ -1,0 +1,56 @@
+{
+  "info": {
+    "name": "Client Demo — Grade API",
+    "description": "Demo for client.\n\n1) Start server (api/start_demo.bat)\n2) Set base_url (local or ngrok URL)\n3) Use Desktop Agent for file upload\n4) POST /api/v1/grade with images (1–10 files)\n\nBrowser UI: {{base_url}}/test",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/health"
+      }
+    },
+    {
+      "name": "Open Test Page (browser)",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/test",
+        "description": "Open this URL in browser for easiest demo."
+      }
+    },
+    {
+      "name": "Grade 1–10 Images",
+      "request": {
+        "method": "POST",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "images",
+              "type": "file",
+              "src": [],
+              "description": "Add more rows with key=images for up to 10 files"
+            },
+            {
+              "key": "images",
+              "type": "file",
+              "src": [],
+              "description": "Optional 2nd image"
+            },
+            {
+              "key": "a_threshold",
+              "type": "text",
+              "value": "0.45"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/v1/grade"
+      }
+    }
+  ]
+}

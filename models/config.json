@@ -1,0 +1,12 @@
+{
+  "detector_conf": 0.4,
+  "detector_iou": 0.5,
+  "detector_imgsz": 1024,
+  "classifier_input_size": 380,
+  "classifier_backbone": "efficientnet_b0",
+  "classifier_dropout": 0.3,
+  "padding_ratio": 0.02,
+  "crop_save_size": 512,
+  "best_val_acc": 0.9133216986620128,
+  "a_threshold": 0.45
+}

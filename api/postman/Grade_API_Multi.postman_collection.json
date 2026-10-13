@@ -1,0 +1,113 @@
+{
+  "info": {
+    "_postman_id": "grade-api-multi-10-images",
+    "name": "Grade API (1–10 Images)",
+    "description": "Simple grading API — no login.\n\nPOST /api/v1/grade\n- Field: images (File), 1 to 10 times\n- Optional: a_threshold\n\nIMPORTANT: Use Desktop Agent (not Cloud Agent) so local files upload.\nBrowser alternative: http://127.0.0.1:8000/test",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/health",
+        "description": "Server + ML ready check. Expect status ok."
+      }
+    },
+    {
+      "name": "2. Grade 1 Image",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "images",
+              "type": "file",
+              "src": [],
+              "description": "Select ONE file: F:\\Ahmad\\sample_images\\apple.jpg"
+            },
+            {
+              "key": "a_threshold",
+              "type": "text",
+              "value": "0.45",
+              "description": "Optional"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/v1/grade",
+        "description": "Body = form-data.\nimages = File (not Text).\nSelect apple.jpg then Send.\nUse Desktop Agent."
+      }
+    },
+    {
+      "name": "3. Grade Multiple Images (up to 10)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "images",
+              "type": "file",
+              "src": [],
+              "description": "File 1 — KEY must be images"
+            },
+            {
+              "key": "images",
+              "type": "file",
+              "src": [],
+              "description": "File 2 — same KEY images"
+            },
+            {
+              "key": "images",
+              "type": "file",
+              "src": [],
+              "description": "File 3 — add more rows with KEY=images up to 10"
+            },
+            {
+              "key": "a_threshold",
+              "type": "text",
+              "value": "0.45"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/v1/grade",
+        "description": "Har photo ke liye nayi row:\nKEY = images\nTYPE = File\nMax 10 files.\n\nResponse: results[] per image + summary totals."
+      }
+    },
+    {
+      "name": "4. Grade Single (alias field: image)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "image",
+              "type": "file",
+              "src": [],
+              "description": "Single file using alias field name 'image'"
+            },
+            {
+              "key": "a_threshold",
+              "type": "text",
+              "value": "0.45"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/v1/grade",
+        "description": "Optional alias: field name 'image' instead of 'images'."
+      }
+    }
+  ]
+}

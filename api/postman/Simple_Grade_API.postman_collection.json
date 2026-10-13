@@ -1,0 +1,72 @@
+{
+  "info": {
+    "name": "Simple Grade API (1 endpoint)",
+    "description": "POST /api/v1/grade — 1 to 10 images → JSON results.\n\nNo login.\nBrowser test: {{base_url}}/test\n\nForm field: images (File) — same key multiple times, max 10.\nSingle photo: use field image OR one images file.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/health"
+      }
+    },
+    {
+      "name": "Grade 1 Image",
+      "request": {
+        "method": "POST",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "images",
+              "type": "file",
+              "src": [],
+              "description": "Select one file e.g. apple.jpg"
+            },
+            {
+              "key": "a_threshold",
+              "type": "text",
+              "value": "0.45"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/v1/grade"
+      }
+    },
+    {
+      "name": "Grade up to 10 Images",
+      "request": {
+        "method": "POST",
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "images",
+              "type": "file",
+              "src": [],
+              "description": "Row 1 — select file"
+            },
+            {
+              "key": "images",
+              "type": "file",
+              "src": [],
+              "description": "Row 2 — same key 'images', another file (add more rows up to 10)"
+            },
+            {
+              "key": "a_threshold",
+              "type": "text",
+              "value": "0.45"
+            }
+          ]
+        },
+        "url": "{{base_url}}/api/v1/grade",
+        "description": "Add more form-data rows with KEY=images TYPE=File (max 10)."
+      }
+    }
+  ]
+}

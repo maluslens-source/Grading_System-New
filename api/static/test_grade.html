@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Apple Grade API — Quick Test (up to 10 images)</title>
+  <style>
+    :root { font-family: system-ui, Segoe UI, sans-serif; }
+    body { max-width: 780px; margin: 40px auto; padding: 0 16px; color: #1a1a1a; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .sub { color: #555; margin-bottom: 24px; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 20px; background: #fafafa; }
+    label { display: block; font-weight: 600; margin: 12px 0 6px; }
+    input[type="file"], input[type="number"] { width: 100%; max-width: 100%; }
+    button {
+      margin-top: 18px; padding: 10px 18px; border: 0; border-radius: 8px;
+      background: #1f6feb; color: #fff; font-weight: 600; cursor: pointer;
+    }
+    button:disabled { opacity: 0.6; cursor: wait; }
+    pre {
+      margin-top: 20px; padding: 14px; background: #0d1117; color: #c9d1d9;
+      border-radius: 10px; overflow: auto; white-space: pre-wrap; word-break: break-word;
+      min-height: 80px;
+    }
+    .ok { color: #1a7f37; font-weight: 600; }
+    .err { color: #cf222e; font-weight: 600; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+    .stat { background: #fff; border: 1px solid #e5e5e5; border-radius: 10px; padding: 12px; text-align: center; }
+    .stat b { display: block; font-size: 1.4rem; }
+    .hint { font-size: 0.9rem; color: #666; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Apple Grade — Quick Test</h1>
+  <p class="sub">1 se 10 photos ek saath choose karo → Analyze → JSON (API: POST /api/v1/grade).</p>
+
+  <div class="card">
+    <form id="form">
+      <label for="images">Tray photos (max 10)</label>
+      <input id="images" name="images" type="file" accept="image/*,.heic,.heif" multiple required />
+      <p class="hint">Ctrl / Shift se multiple select. Max 10 files. Sirf images kaafi hain — a_threshold system se aati hai (software jaisi).</p>
+
+      <button type="submit" id="btn">Analyze Images</button>
+    </form>
+
+    <p id="status"></p>
+    <div class="stats" id="stats" hidden>
+      <div class="stat"><span>Total</span><b id="t">-</b></div>
+      <div class="stat"><span>Good (A)</span><b id="a">-</b></div>
+      <div class="stat"><span>Bad (B)</span><b id="b">-</b></div>
+    </div>
+    <pre id="out">Result yahan dikhega…</pre>
+  </div>
+
+  <script>
+    const form = document.getElementById('form');
+    const btn = document.getElementById('btn');
+    const out = document.getElementById('out');
+    const status = document.getElementById('status');
+    const stats = document.getElementById('stats');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const files = Array.from(document.getElementById('images').files || []);
+      if (!files.length) {
+        status.innerHTML = '<span class="err">Pehle image select karo</span>';
+        return;
+      }
+      if (files.length > 10) {
+        status.innerHTML = '<span class="err">Max 10 images. Tumne ' + files.length + ' select kiye.</span>';
+        return;
+      }
+
+      const fd = new FormData();
+      files.forEach((f) => fd.append('images', f));
+      // a_threshold mat bhejo — API software wala system default use karti hai
+
+      btn.disabled = true;
+      status.innerHTML = 'Analyzing ' + files.length + ' image(s)… wait';
+      out.textContent = '';
+      stats.hidden = true;
+
+      try {
+        const res = await fetch('/api/v1/grade', { method: 'POST', body: fd });
+        const data = await res.json();
+        out.textContent = JSON.stringify(data, null, 2);
+
+        if (!res.ok) {
+          status.innerHTML = '<span class="err">Error ' + res.status + '</span>';
+          return;
+        }
+
+        status.innerHTML = '<span class="ok">Success — ' + (data.image_count || 0) + ' image(s)</span>';
+        stats.hidden = false;
+        const s = data.summary || {};
+        document.getElementById('t').textContent = s.total_apples ?? '-';
+        document.getElementById('a').textContent = s.good_apples ?? '-';
+        document.getElementById('b').textContent = s.bad_apples ?? '-';
+      } catch (err) {
+        status.innerHTML = '<span class="err">Request failed — server chal raha hai?</span>';
+        out.textContent = String(err);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

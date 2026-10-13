@@ -1,0 +1,63 @@
+{
+  "info": {
+    "name": "Laravel Apple API (PHP) + Python ML",
+    "description": "Business APIs on Laravel :8080. Python ML on :8000 only for grading.\n\nHeaders after login:\nAuthorization: Bearer {token}\nX-Device-Id: {device_id}",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://127.0.0.1:8080" },
+    { "key": "token", "value": "" },
+    { "key": "device_id", "value": "postman-device-1" },
+    { "key": "job_id", "value": "" },
+    { "key": "user_id", "value": "2" },
+    { "key": "org_id", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": { "method": "GET", "url": "{{base_url}}/api/v1/health" }
+    },
+    {
+      "name": "Admin Login",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "if (pm.response.code===200){ const j=pm.response.json(); pm.collectionVariables.set('token', j.access_token); }"
+          ]
+        }
+      }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin123!\",\n  \"device_id\": \"{{device_id}}\"\n}"
+        },
+        "url": "{{base_url}}/api/v1/auth/login"
+      }
+    },
+    {
+      "name": "Submit Job (images + lot)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "X-Device-Id", "value": "{{device_id}}" }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "images[]", "type": "file", "src": [] },
+            { "key": "lot_id", "type": "text", "value": "LOT-001" },
+            { "key": "lot_name", "type": "text", "value": "Demo Lot" },
+            { "key": "crates_sampled", "type": "text", "value": "10" },
+            { "key": "average_weight_kg", "type": "text", "value": "18.5" },
+            { "key": "auto_process", "type": "text", "value": "1" }
+          ]
+        },
+        "url": "{{base_url}}/api/v1/jobs/submit"
+      }
+    }
+  ]
+}
