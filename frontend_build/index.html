@@ -102,7 +102,7 @@
       formData.append('file', fileInput.files[0]);
 
       try {
-        const response = await fetch(`/grade?threshold=${threshold}`, {
+          const response = await fetch(`/api/v1/grade?threshold=${threshold}`, {
           method: 'POST',
           body: formData
         });
