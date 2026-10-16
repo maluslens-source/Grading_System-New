@@ -1,22 +1,24 @@
-# Dockerfile for Grading_System-New
-# Production-ready container for the Python FastAPI backend + ML engine.
-#
-# Build:
-#   docker build -t grading-system-new .
-# Run:
-#   docker run --rm -p 8000:8000 \
-#     -v $(pwd)/models:/app/models \
-#     grading-system-new
-#
-# The API serves the built frontend from frontend_build/ if present and runs the
-# ML grading pipeline using the models stored in /app/models.
+# ==========================================
+# Stage 1: Build the Frontend (React / Vue)
+# ==========================================
+FROM node:18-alpine AS frontend-builder
+WORKDIR /frontend
 
+# Copy frontend package definitions and source
+# (adjust the path if your frontend code is in a subfolder, e.g. frontend/)
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+
+# ==========================================
+# Stage 2: Production Python Backend Container
+# ==========================================
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-# Install system deps for OpenCV, ultralytics, pillow-heif, and image processing.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     ffmpeg \
@@ -32,24 +34,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy dependency files first for better layer caching.
+# Install Python dependencies
 COPY requirements.txt ./
 COPY api/requirements.txt ./api/requirements.txt
-
-# Install Python dependencies.
 RUN pip install --upgrade pip setuptools wheel \
     && pip install --no-cache-dir -r requirements.txt \
     && pip install --no-cache-dir -r api/requirements.txt \
     && rm -rf /root/.cache/pip
 
-# Copy the rest of the app.
+# Copy backend code
 COPY . .
 
-# Mountable model directory for weights.
+# Copy the compiled frontend assets from Stage 1 into frontend_build/
+COPY --from=frontend-builder /frontend/build ./frontend_build
+# (Note: Change "/frontend/build" to "/frontend/dist" if you are using Vite instead of Create-React-App)
+
+# Ensure models and output directories exist
 RUN mkdir -p /app/models /app/output /app/sample_images
-VOLUME ["/app/models", "/app/output", "/app/sample_images"]
 
 EXPOSE 8000
 
-# Default command: run the FastAPI app.
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Cloud Run injects PORT; fallback to 8000
+CMD exec uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-8000}
