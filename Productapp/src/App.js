@@ -168,8 +168,8 @@ export default function App() {
         {layout === "vr" && <Configurator />}
         <Routes>
           {getRoutes(routes)}
-          <Route path="/" element={<Landing />} />
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="/" element={<Navigate to="/authentication/sign-in" replace />} />
+          <Route path="*" element={<Navigate to="/authentication/sign-in" replace />} />
         </Routes>
       </ThemeProvider>
     </CacheProvider>
@@ -194,8 +194,8 @@ export default function App() {
       {layout === "vr" && <Configurator />}
       <Routes>
         {getRoutes(routes)}
-        <Route path="/" element={<Landing />} />
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="/" element={<Navigate to="/authentication/sign-in" replace />} />
+        <Route path="*" element={<Navigate to="/authentication/sign-in" replace />} />
       </Routes>
     </ThemeProvider>
   );
