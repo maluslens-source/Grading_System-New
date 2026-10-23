@@ -19,14 +19,11 @@ function Dashboard() {
   const navigate = useNavigate();
   const [checking, setChecking] = useState(false);
 
-  const displayName =
-    user?.full_name || user?.email?.split("@")[0] || "User";
-
   useEffect(() => {
     document.title = "Dashboard · Malus Lens";
     refreshMe().catch(() => {});
   }, [refreshMe]);
-
+  
   const startAnalysis = async () => {
     setChecking(true);
     try {
@@ -67,8 +64,8 @@ function Dashboard() {
         <MDTypography variant="h5" fontWeight="bold" mb={0.75} sx={{ color: BRAND.black }}>
           Welcome to Malus Lens
         </MDTypography>
-        <MDTypography variant="body2" sx={{ color: BRAND.black, opacity: 0.85 }}>
-          {displayName}
+       <MDTypography variant="body2" sx={{ color: BRAND.black, opacity: 0.85 }}>
+          {user?.name ? `${user.name}` : "User"}
           {user?.organization_name ? ` · ${user.organization_name}` : ""}
         </MDTypography>
         <MDTypography
