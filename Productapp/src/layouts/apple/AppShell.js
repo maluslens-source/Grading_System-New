@@ -148,13 +148,14 @@ function AppShell({ title, children, showLogout = true, contentMaxWidth = 900 })
         </MDBox>
         {!isCollapsed && (
           <MDTypography
-            variant="caption"
-            display="block"
-            mt={1}
-            sx={{ color: BRAND.black, opacity: 0.5 }}
-          >
-            Malus Lens
-          </MDTypography>
+              variant="button"
+              fontWeight="bold"
+              display="block"
+              noWrap
+              sx={{ color: BRAND.black }}
+            >
+              {user?.full_name || user?.email?.split("@")[0] || "User"}
+            </MDTypography>
         )}
         {!isCollapsed && (
           <MDBox mt={1.25} height={3} width={36} borderRadius={1} sx={{ bgcolor: BRAND.accent }} />
